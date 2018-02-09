@@ -9,11 +9,11 @@ instead of external Algorithm, *Selective Search* , to get training images , we 
 
 
 # Faster rcnn Structure 
-![Alt text](./readme/structure.png)
+![Alt text](readme/structure.png)
 
 # result 
 
-![Alt text](./readme/reult.png)
+![Alt text](readme/reult.png)
 
 
 
