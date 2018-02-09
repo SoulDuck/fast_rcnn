@@ -251,7 +251,7 @@ class Trainer(object):
                             boxes = np.hstack([boxes, scores])
                             boxes = self.get_top_k(boxes, logits, 20)
                             keep = self.non_maximum_supression(boxes, .3)
-                            ㅅㅂ = boxes[keep, :4]
+                            boxes = boxes[keep, :4]
                             roi_pool = rois[:, 1:]*np.asarray([16, 16, 16, 16])
                             self.send_image_with_proposals(k, im[:, :, [2, 1, 0]], boxes, im.shape)
                             #self.handler.send_image_with_proposals(k, im[:, :, [2, 1, 0]], roi_pool, im.shape, True)
