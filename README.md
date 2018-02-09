@@ -13,7 +13,7 @@ instead of external Algorithm, *Selective Search* , to get training images , we 
 
 # result 
 
-![Alt text](readme/reusult.png)
+![Alt text](readme/result.png)
 
 
 
