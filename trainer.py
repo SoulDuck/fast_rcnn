@@ -150,7 +150,7 @@ class Trainer(object):
             cv2.rectangle(im_, (x1, y1), (x2, y2), (255, 0, 0), 1)
         pil_im = Image.fromarray(im_)
         count = 0
-        save_path = os.path.join('./tested_imaged', str(count) + '.png')
+
         if rois:
             plt.imshow(pil_im)
             plt.show()
@@ -158,10 +158,13 @@ class Trainer(object):
             # neptune_im = neptune.Image(name='all the RoIs', description='region proposals', data=pil_im)
             # self.im_channels[0].send(x=time_step, y=neptune_im)
         else:
+
             plt.imshow(pil_im)
             while(True):
+                save_path = os.path.join('./tested_imaged', str(count) + '.png')
                 if not os.path.isfile(save_path):
                     plt.savefig(fname=save_path)
+                    print 'images saved!'
                     break;
                 else:
                     count+=1
@@ -269,7 +272,8 @@ class Trainer(object):
                             saver.save(sess , save_path='./saved_model/model' , global_step=global_step)
                             #self.handler.send_image_with_proposals(k, im[:, :, [2, 1, 0]], roi_pool, im.shape, True)
                             k += 1
-                        except:
+                        except Exception as e :
+                            print e
                             pass;
                     global_step+=1
 if '__main__' == __name__:
