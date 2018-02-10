@@ -15,7 +15,6 @@ class Trainer(object):
         im_paths = self.get_im_paths()
         roi_paths = self.get_roi_paths()
         self.show_im =True
-
         self.pretrained_path = './data/vgg16-20160129.tfmodel'
         self.im_paths = np.asarray(im_paths)
         self.roi_paths = np.asarray(roi_paths)
