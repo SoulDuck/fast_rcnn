@@ -161,7 +161,7 @@ class Trainer(object):
 
             plt.imshow(pil_im)
             while(True):
-                save_path = os.path.join('./tested_imaged', str(count) + '.png')
+                save_path = os.path.join('./tested_images', str(count) + '.png')
                 plt.show()
                 if not os.path.isfile(save_path):
                     plt.savefig(save_path)
