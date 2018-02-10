@@ -180,10 +180,11 @@ class Trainer(object):
                                 allow_soft_placement=True,
                                 log_device_placement=False)) as sess:
             saver=tf.train.Saver(max_to_keep=100)
-            save_path='./saved_model'
+            save_dir='./saved_model'
             init = tf.global_variables_initializer()
             sess.run(init)
-            if tf.train.get_checkpoint_state(checkpoint_dir=save_path):
+            if tf.train.get_checkpoint_state(checkpoint_dir=save_dir):
+                save_path=os.path.join(save_dir , 'model-100')
                 saver.restore(sess, save_path=save_path)
 
 
