@@ -2,7 +2,6 @@ import tensorflow as tf
 class FastRCNN(object):
 
     def __init__(self, path):
-
         self.x = tf.placeholder(tf.float32, shape=(1, None, None, 3))
         self.im_dims = tf.placeholder(tf.float32, shape=[1, 2])
         self.y = tf.placeholder(tf.float32, shape=(None, 4))
