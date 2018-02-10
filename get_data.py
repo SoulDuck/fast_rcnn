@@ -39,7 +39,6 @@ def extract_images(pascal_dir, output_dir):
         return
     os.makedirs(img_dir)
     os.makedirs(roidb_dir)
-
     ann_paths = sorted(glob(os.path.join(pascal_dir, 'Annotations')+"/*"))
     im_paths = sorted(glob(os.path.join(pascal_dir, 'JPEGImages')+"/*"))
     mu = 0

@@ -150,6 +150,8 @@ class Trainer(object):
             y2 = int(height * proposal[3] / float(shape[0]))
             cv2.rectangle(im_, (x1, y1), (x2, y2), (255, 0, 0), 1)
         pil_im = Image.fromarray(im_)
+        count = 0
+        save_path = os.path.join('./tested_imaged', str(count) + '.png')
         if rois:
             plt.imshow(pil_im)
             plt.show()
@@ -158,6 +160,12 @@ class Trainer(object):
             # self.im_channels[0].send(x=time_step, y=neptune_im)
         else:
             plt.imshow(pil_im)
+            while(True):
+                if not os.path.isfile(save_path):
+                    plt.savefig(fname=save_path)
+                    break;
+                else:
+                    count+=1
             plt.show()
             plt.close()
             pass;
@@ -168,10 +176,14 @@ class Trainer(object):
         with tf.Session(config=tf.ConfigProto(
                                 allow_soft_placement=True,
                                 log_device_placement=False)) as sess:
+            saver=tf.train.Saver(max_to_keep=100)
+            save_path='./saved_model'
             init = tf.global_variables_initializer()
             sess.run(init)
+
             k = 0
             losses_ = [[], [], []]
+            global_step=0
             for i in range(num_epochs):
                 ids = np.arange(len(self.im_paths))
                 np.random.shuffle(ids)
@@ -236,12 +248,12 @@ class Trainer(object):
                     losses_[0].append(reg)
                     losses_[1].append(cls)
                     losses_[2].append(tot)
-                    if m % 60 == 0:
+                    if m % 100 == 0:
                         reg = sum(losses_[0])/len(losses_[0])
                         cls = sum(losses_[1])/len(losses_[1])
                         tot = sum(losses_[2])/len(losses_[2])
                         print reg , cls ,tot
-                    if m % 60 == 0:
+                    if m % 100 == 0:
                         try:
                             boxes = sess.run(self.net.boxes, feed_dict=feed_dict)
                             logits = sess.run(self.net.logits, feed_dict=feed_dict)
@@ -254,10 +266,12 @@ class Trainer(object):
                             boxes = boxes[keep, :4]
                             roi_pool = rois[:, 1:]*np.asarray([16, 16, 16, 16])
                             self.send_image_with_proposals(k, im[:, :, [2, 1, 0]], boxes, im.shape)
+                            saver.save(sess , save_path='./saved_model/model' , global_step=global_step)
                             #self.handler.send_image_with_proposals(k, im[:, :, [2, 1, 0]], roi_pool, im.shape, True)
                             k += 1
                         except:
                             pass;
+                    global_step+=1
 if '__main__' == __name__:
     trainer=Trainer()
 

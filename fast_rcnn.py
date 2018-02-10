@@ -1,9 +1,4 @@
 import tensorflow as tf
-
-
-
-
-
 class FastRCNN(object):
 
     def __init__(self, path):
@@ -161,3 +156,5 @@ class FastRCNN(object):
         loss = (self.smooth_l1(x[:, 0], y[:, 0]) + self.smooth_l1(x[:, 1], y[:, 1])
                 + self.smooth_l1(x[:, 2], y[:, 2]) + self.smooth_l1(x[:, 3], y[:, 3]))
         return loss
+
+    def save_model(self):
