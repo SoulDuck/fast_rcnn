@@ -157,4 +157,3 @@ class FastRCNN(object):
                 + self.smooth_l1(x[:, 2], y[:, 2]) + self.smooth_l1(x[:, 3], y[:, 3]))
         return loss
 
-    def save_model(self):

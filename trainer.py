@@ -166,6 +166,7 @@ class Trainer(object):
                     break;
                 else:
                     count+=1
+
             plt.show()
             plt.close()
             pass;
