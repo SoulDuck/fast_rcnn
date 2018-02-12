@@ -8,7 +8,6 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 class Trainer(object):
-
     def __init__(self , data_type):
         if data_type =='fundus':
             self.im_dir = './data/fundus_images'
@@ -145,8 +144,8 @@ class Trainer(object):
         return keep
 
     def send_image_with_proposals(self, time_step, im, proposals, shape, rois=False):
-        width = 340
-        height = 150
+        width = 300
+        height = 300
         im_ = cv2.resize(im, (width, height))
         im_ = np.uint8(im_ * 255.)
         for proposal in proposals:
@@ -159,11 +158,28 @@ class Trainer(object):
         count = 0
 
         if rois:
+            for roi in rois:
+                x1 = int(width * roi[0] / float(shape[1]))
+                y1 = int(height * roi[1] / float(shape[0]))
+                x2 = int(width * roi[2] / float(shape[1]))
+                y2 = int(height * roi[3] / float(shape[0]))
+            cv2.rectangle(im_, (x1, y1), (x2, y2), (0, 0, 255), 1)
+            pil_im = Image.fromarray(im_)
             plt.imshow(pil_im)
+            while (True):
+                save_path = os.path.join('./tested_images', str(count) + '.png')
+                if not os.path.isfile(save_path):
+                    plt.savefig(save_path)
+                    print 'images saved!'
+                    break;
+                else:
+                    count += 1
+
             plt.show()
             plt.close()
             # neptune_im = neptune.Image(name='all the RoIs', description='region proposals', data=pil_im)
             # self.im_channels[0].send(x=time_step, y=neptune_im)
+
         else:
 
             plt.imshow(pil_im)
@@ -186,7 +202,7 @@ class Trainer(object):
         with tf.Session(config=tf.ConfigProto(
                                 allow_soft_placement=True,
                                 log_device_placement=False)) as sess:
-            saver=tf.train.Saver(max_to_keep=100)
+            saver=tf.train.Saver(max_to_keep=10)
             save_dir='./saved_model'
             init = tf.global_variables_initializer()
             sess.run(init)
