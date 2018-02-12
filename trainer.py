@@ -163,7 +163,7 @@ class Trainer(object):
                 y1 = int(height * roi[1] / float(shape[0]))
                 x2 = int(width * roi[2] / float(shape[1]))
                 y2 = int(height * roi[3] / float(shape[0]))
-            cv2.rectangle(im_, (x1, y1), (x2, y2), (0, 0, 255), 1)
+                cv2.rectangle(im_, (x1, y1), (x2, y2), (0, 0, 255), 1)
             pil_im = Image.fromarray(im_)
             plt.imshow(pil_im)
             while (True):
