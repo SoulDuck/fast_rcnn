@@ -120,16 +120,18 @@ class Trainer(object):
         while order.size > 0:
             i = order[0]
             keep.append(i)
-            xx1 = np.maximum(x1[i], x1[order[1:]])
+            xx1 = np.maximum(x1[i], x1[order[1:]]) # xx1 shape : [19,]
             yy1 = np.maximum(y1[i], y1[order[1:]])
             xx2 = np.minimum(x2[i], x2[order[1:]])
             yy2 = np.minimum(y2[i], y2[order[1:]])
-            print 'xx1',xx1
-            exit()
 
             w = np.maximum(0.0, xx2 - xx1 + 1)
             h = np.maximum(0.0, yy2 - yy1 + 1)
-            inter = w * h
+            inter = w * h #inter shape : [ 19,]
+            print inter
+            exit()
+
+
             ovr = inter / (areas[i] + areas[order[1:]] - inter)
 
             inds = np.where(ovr <= thresh)[0]
