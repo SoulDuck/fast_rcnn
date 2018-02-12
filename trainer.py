@@ -107,18 +107,16 @@ class Trainer(object):
         return boxes[a[:k]]
 
     # by Ross Girshick
-
     def non_maximum_supression(self, dets, thresh):
         x1 = dets[:, 0]
         y1 = dets[:, 1]
         x2 = dets[:, 2]
         y2 = dets[:, 3]
         scores = dets[:, 4]
-
         areas = (x2 - x1 + 1) * (y2 - y1 + 1)
         order = scores.argsort()[::-1]
-
         keep = []
+
         while order.size > 0:
             i = order[0]
             keep.append(i)
@@ -126,6 +124,8 @@ class Trainer(object):
             yy1 = np.maximum(y1[i], y1[order[1:]])
             xx2 = np.minimum(x2[i], x2[order[1:]])
             yy2 = np.minimum(y2[i], y2[order[1:]])
+            print 'xx1',xx1
+            exit()
 
             w = np.maximum(0.0, xx2 - xx1 + 1)
             h = np.maximum(0.0, yy2 - yy1 + 1)
@@ -134,7 +134,6 @@ class Trainer(object):
 
             inds = np.where(ovr <= thresh)[0]
             order = order[inds + 1]
-
         return keep
 
     def send_image_with_proposals(self, time_step, im, proposals, shape, rois=False):
@@ -186,9 +185,6 @@ class Trainer(object):
             if tf.train.get_checkpoint_state(checkpoint_dir=save_dir):
                 save_path=os.path.join(save_dir , 'model-100')
                 saver.restore(sess, save_path=save_path)
-
-
-
             k = 0
             losses_ = [[], [], []]
             global_step=0
@@ -235,7 +231,6 @@ class Trainer(object):
                     rois = np.vstack([positive_rois, negative_rois])
                     y_ = np.zeros((len(rois), ), dtype=np.int32)
                     zeros = np.zeros((len(rois), 1))
-
                     rois = np.hstack([zeros, rois])
                     rois = np.int32(rois)
                     y_[:len(positive_rois)] = 1
