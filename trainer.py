@@ -128,14 +128,11 @@ class Trainer(object):
             w = np.maximum(0.0, xx2 - xx1 + 1)
             h = np.maximum(0.0, yy2 - yy1 + 1)
             inter = w * h #inter shape : [ 19,]
-            print inter
-            exit()
-
-
             ovr = inter / (areas[i] + areas[order[1:]] - inter)
-
             inds = np.where(ovr <= thresh)[0]
             order = order[inds + 1]
+            print order
+
         return keep
 
     def send_image_with_proposals(self, time_step, im, proposals, shape, rois=False):
