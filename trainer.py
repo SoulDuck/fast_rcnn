@@ -183,7 +183,7 @@ class Trainer(object):
             init = tf.global_variables_initializer()
             sess.run(init)
             if tf.train.get_checkpoint_state(checkpoint_dir=save_dir):
-                save_path=os.path.join(save_dir , 'model-100')
+                save_path=os.path.join(save_dir , 'model-53762')
                 saver.restore(sess, save_path=save_path)
             k = 0
             losses_ = [[], [], []]
