@@ -291,7 +291,7 @@ class Trainer(object):
                             keep = self.non_maximum_supression(boxes, .3)
                             boxes = boxes[keep, :4]
                             roi_pool = rois[:, 1:]*np.asarray([16, 16, 16, 16])
-                            self.send_image_with_proposals(k, im[:, :, [2, 1, 0]], boxes, im.shape)
+                            self.send_image_with_proposals(k, im[:, :, [2, 1, 0]], boxes, im.shape , gt_boxes)
                             saver.save(sess , save_path='./saved_model/model' , global_step=global_step)
                             #self.handler.send_image_with_proposals(k, im[:, :, [2, 1, 0]], roi_pool, im.shape, True)
                             k += 1
