@@ -131,7 +131,7 @@ class Trainer(object):
             ovr = inter / (areas[i] + areas[order[1:]] - inter)
             inds = np.where(ovr <= thresh)[0]
             order = order[inds + 1]
-            print order
+            print 'order ',order
 
         return keep
 
