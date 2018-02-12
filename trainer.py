@@ -169,7 +169,7 @@ class Trainer(object):
             while (True):
                 save_path = os.path.join('./tested_images', str(count) + '.png')
                 if not os.path.isfile(save_path):
-                    plt.savefig(save_path)
+                    plt.imsave(fname = save_path , arr= pil_im)
                     print 'images saved!'
                     break;
                 else:
@@ -181,17 +181,15 @@ class Trainer(object):
             # self.im_channels[0].send(x=time_step, y=neptune_im)
 
         else:
-
             plt.imshow(pil_im)
             while(True):
                 save_path = os.path.join('./tested_images', str(count) + '.png')
                 if not os.path.isfile(save_path):
-                    plt.savefig(save_path)
+                    plt.imsave(fname=save_path, arr=pil_im)
                     print 'images saved!'
                     break;
                 else:
                     count+=1
-
             plt.show()
             plt.close()
             pass;
