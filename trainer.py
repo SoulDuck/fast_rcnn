@@ -131,13 +131,7 @@ class Trainer(object):
             inter = w * h #inter shape : [ 19,]
             ovr = inter / (areas[i] + areas[order[1:]] - inter)
             inds = np.where(ovr <= thresh)[0]
-
-            print 'order',order
-            print 'ovr',ovr
-            print 'inds' , inds
-
             order = order[inds + 1]
-            print 'order ',order
 
         return keep
 
@@ -271,8 +265,6 @@ class Trainer(object):
                             boxes = np.hstack([boxes, scores])
                             boxes = self.get_top_k(boxes, logits, 20)
                             keep = self.non_maximum_supression(boxes, .3)
-                            print keep
-                            exit()
                             boxes = boxes[keep, :4]
                             roi_pool = rois[:, 1:]*np.asarray([16, 16, 16, 16])
                             self.send_image_with_proposals(k, im[:, :, [2, 1, 0]], boxes, im.shape)
