@@ -146,6 +146,7 @@ class Trainer(object):
     def send_image_with_proposals(self, time_step, im, proposals, shape, rois=False):
         width = 300
         height = 300
+        print 'a'
         im_ = cv2.resize(im, (width, height))
         im_ = np.uint8(im_ * 255.)
         for proposal in proposals:
