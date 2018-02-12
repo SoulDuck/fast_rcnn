@@ -119,6 +119,7 @@ class Trainer(object):
         while order.size > 0:
             i = order[0]
             keep.append(i)
+
             xx1 = np.maximum(x1[i], x1[order[1:]]) # xx1 shape : [19,]
             yy1 = np.maximum(y1[i], y1[order[1:]])
             xx2 = np.minimum(x2[i], x2[order[1:]])
@@ -130,9 +131,11 @@ class Trainer(object):
             inter = w * h #inter shape : [ 19,]
             ovr = inter / (areas[i] + areas[order[1:]] - inter)
             inds = np.where(ovr <= thresh)[0]
+
             print 'order',order
             print 'ovr',ovr
             print 'inds' , inds
+
             order = order[inds + 1]
             print 'order ',order
 
@@ -268,6 +271,7 @@ class Trainer(object):
                             boxes = np.hstack([boxes, scores])
                             boxes = self.get_top_k(boxes, logits, 20)
                             keep = self.non_maximum_supression(boxes, .3)
+                            print keep
                             exit()
                             boxes = boxes[keep, :4]
                             roi_pool = rois[:, 1:]*np.asarray([16, 16, 16, 16])
