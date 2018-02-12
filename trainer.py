@@ -9,9 +9,19 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 class Trainer(object):
 
-    def __init__(self):
-        self.im_dir = './data/images'
-        self.roi_dir = './data/roidb'
+    def __init__(self , data_type):
+        if data_type =='fundus':
+            self.im_dir = './data/fundus_images'
+            self.roi_dir = './data/fundus_roidb'
+            self.img_h = 1001
+            self.img_w = 1001
+
+        else:
+            self.im_dir = './data/images'
+            self.roi_dir = './data/roidb'
+            self.img_h=1920
+            self.img_w=576
+
         im_paths = self.get_im_paths()
         roi_paths = self.get_roi_paths()
         self.show_im =True
@@ -132,7 +142,6 @@ class Trainer(object):
             ovr = inter / (areas[i] + areas[order[1:]] - inter)
             inds = np.where(ovr <= thresh)[0]
             order = order[inds + 1]
-
         return keep
 
     def send_image_with_proposals(self, time_step, im, proposals, shape, rois=False):
@@ -195,10 +204,8 @@ class Trainer(object):
                 for m in range(len(im_paths)):
                     im = cv2.imread(im_paths[m]).astype('float32')/255.
                     gt_boxes = np.load(roi_paths[m])
-                    gt_boxes = self.relabel(gt_boxes, im.shape, (576, 1920))
-
-                    im = cv2.resize(im, (1920, 576))
-
+                    gt_boxes = self.relabel(gt_boxes, im.shape, (self.img_w, self.img_h))
+                    im = cv2.resize(im, (self.img_h, self.img_w))
                     """
                     # show groundtruth
                     fig = plt.figure()
@@ -213,7 +220,6 @@ class Trainer(object):
                     """
                     x = im.reshape((1, im.shape[0], im.shape[1], 3))
                     positive_rois, ob_numbers = self.generate_positive_roi(gt_boxes)
-
                     """
                     #show positive label 
                     fig = plt.figure()
@@ -230,6 +236,7 @@ class Trainer(object):
                     rois = np.vstack([positive_rois, negative_rois])
                     y_ = np.zeros((len(rois), ), dtype=np.int32)
                     zeros = np.zeros((len(rois), 1))
+
                     rois = np.hstack([zeros, rois])
                     rois = np.int32(rois)
                     y_[:len(positive_rois)] = 1
@@ -242,7 +249,8 @@ class Trainer(object):
                                  self.net.y_: y_,
                                  self.net.roidb: rois,
                                  self.net.learn_rate: 0.0001,
-                                 self.net.im_dims:[[1920,576]]}
+                                 self.net.im_dims:[[self.img_h,self.img_w]]}
+
                     sess.run(self.net.opt, feed_dict=feed_dict)
                     tot = sess.run(self.net.loss_, feed_dict=feed_dict)
                     reg = sess.run(self.net.reg_loss, feed_dict=feed_dict)
@@ -276,5 +284,5 @@ class Trainer(object):
                             pass;
                     global_step+=1
 if '__main__' == __name__:
-    trainer=Trainer()
+    trainer=Trainer('fundus')
 
