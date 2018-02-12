@@ -144,8 +144,8 @@ class Trainer(object):
         return keep
 
     def send_image_with_proposals(self, time_step, im, proposals, shape, rois=False):
-        width = 300
-        height = 300
+        width = 1001
+        height = 1001
         im_ = cv2.resize(im, (width, height))
         im_ = np.uint8(im_ * 255.)
         for proposal in proposals:
@@ -163,9 +163,7 @@ class Trainer(object):
                 y1 = int(height * roi[1] / float(shape[0]))
                 x2 = int(width * roi[2] / float(shape[1]))
                 y2 = int(height * roi[3] / float(shape[0]))
-            print 'a'
             cv2.rectangle(im_, (x1, y1), (x2, y2), (0, 0, 255), 1)
-            print 'b'
             pil_im = Image.fromarray(im_)
             plt.imshow(pil_im)
             while (True):
