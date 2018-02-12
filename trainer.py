@@ -116,7 +116,6 @@ class Trainer(object):
         areas = (x2 - x1 + 1) * (y2 - y1 + 1)
         order = scores.argsort()[::-1]
         keep = []
-
         while order.size > 0:
             i = order[0]
             keep.append(i)
@@ -127,9 +126,11 @@ class Trainer(object):
 
             w = np.maximum(0.0, xx2 - xx1 + 1)
             h = np.maximum(0.0, yy2 - yy1 + 1)
+
             inter = w * h #inter shape : [ 19,]
             ovr = inter / (areas[i] + areas[order[1:]] - inter)
             inds = np.where(ovr <= thresh)[0]
+            print 'order',order
             order = order[inds + 1]
             print 'order ',order
 
@@ -265,7 +266,6 @@ class Trainer(object):
                             boxes = np.hstack([boxes, scores])
                             boxes = self.get_top_k(boxes, logits, 20)
                             keep = self.non_maximum_supression(boxes, .3)
-                            exit()
                             boxes = boxes[keep, :4]
                             roi_pool = rois[:, 1:]*np.asarray([16, 16, 16, 16])
                             self.send_image_with_proposals(k, im[:, :, [2, 1, 0]], boxes, im.shape)
