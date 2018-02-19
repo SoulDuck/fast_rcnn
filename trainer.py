@@ -3,10 +3,9 @@ import os
 import tensorflow as tf
 import cv2
 from fast_rcnn import FastRCNN
-import matplotlib.pyplot as plt
 from PIL import Image
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+
 class Trainer(object):
     def __init__(self , data_type):
         if data_type =='fundus':
@@ -196,16 +195,16 @@ class Trainer(object):
             # neptune_im = neptune.Image(name='chosen RoIs', description='object detections', data=pil_im)
             #self.im_channels[1].send(x=time_step, y=neptune_im)
 
-    def fit(self , num_epochs):
+    def fit(self , num_epochs , save_path):
         with tf.Session(config=tf.ConfigProto(
                                 allow_soft_placement=True,
                                 log_device_placement=False)) as sess:
             saver=tf.train.Saver(max_to_keep=10)
-            save_dir='./saved_model'
+            save_dir , model_name =os.path.split(save_path)
             init = tf.global_variables_initializer()
             sess.run(init)
             if tf.train.get_checkpoint_state(checkpoint_dir=save_dir):
-                save_path=os.path.join(save_dir , 'model-17821')
+                save_path=os.path.join(save_path)
                 saver.restore(sess, save_path=save_path)
             k = 0
             losses_ = [[], [], []]
@@ -216,53 +215,33 @@ class Trainer(object):
                 im_paths = self.im_paths[ids]
                 roi_paths = self.roi_paths[ids]
                 for m in range(len(im_paths)):
+                    #load image and resize image
                     im = cv2.imread(im_paths[m]).astype('float32')/255.
                     gt_boxes = np.load(roi_paths[m])
                     gt_boxes = self.relabel(gt_boxes, im.shape, (self.img_w, self.img_h))
                     im = cv2.resize(im, (self.img_h, self.img_w))
-                    """
-                    # show groundtruth
-                    fig = plt.figure()
-                    ax = fig.add_subplot(111)
-                    ax.imshow(im)
-                    for gt_box in gt_boxes:
-                        x1,y1,x2,y2=gt_box
-                        rect=patches.Rectangle((x1,y1) ,x2-x1 , y2-y1  , fill=False,edgecolor='w')
-                        ax.add_patch(rect)
-                    plt.show()
-                    exit()
-                    """
                     x = im.reshape((1, im.shape[0], im.shape[1], 3))
+
+                    #get positive and negative roi
                     positive_rois, ob_numbers = self.generate_positive_roi(gt_boxes)
-                    """
-                    #show positive label 
-                    fig = plt.figure()
-                    ax = fig.add_subplot(111)
-                    ax.imshow(im)
-                    for roi in positive_rois:
-                        x1,y1,x2,y2=roi
-                        rect=patches.Rectangle((x1,y1) ,x2-x1 , y2-y1 , fill=False , edgecolor='w')
-                        ax.add_patch(rect)
-                    plt.show()
-                    exit()
-                    """
                     negative_rois = self.generate_negative_roi(gt_boxes)
                     rois = np.vstack([positive_rois, negative_rois])
                     y_ = np.zeros((len(rois), ), dtype=np.int32)
                     zeros = np.zeros((len(rois), 1))
-
                     rois = np.hstack([zeros, rois])
                     rois = np.int32(rois)
+
                     y_[:len(positive_rois)] = 1
                     reg = np.zeros((len(rois), 4))
                     boxes_tr = self.bbox_transform(gt_boxes, im.shape)
+
                     for j in range(32):
                         reg[j] = boxes_tr[ob_numbers[j]]
-                    feed_dict = {self.net.x: x,
-                                 self.net.y: reg,
-                                 self.net.y_: y_,
+                    feed_dict = {self.net.x_: x,
+                                 self.net.y_bbox: reg,
+                                 self.net.y_cls: y_,
                                  self.net.roidb: rois,
-                                 self.net.learn_rate: 0.0001,
+                                 self.net.lr: 0.0001,
                                  self.net.im_dims:[[self.img_h,self.img_w]]}
 
                     sess.run(self.net.opt, feed_dict=feed_dict)
@@ -298,5 +277,29 @@ class Trainer(object):
                             pass;
                     global_step+=1
 if '__main__' == __name__:
+    import matplotlib.patches as patches
+    sample_gtboxes=np.load('/Users/seongjungkim/PycharmProjects/fast_rcnn/data/fundus_roidb/5068136_20160511_R.png.npy')
+    img=Image.open('/Users/seongjungkim/PycharmProjects/fast_rcnn/data/fundus_images/5068136_20160511_R.png')
     trainer=Trainer('fundus')
+    fig = plt.figure()
+    ax=fig.add_subplot(111)
+    pos_res , pos_num =trainer.generate_positive_roi(sample_gtboxes)
+    neg_res = trainer.generate_negative_roi(sample_gtboxes)
+    for r in pos_res:
+        x1,y1,x2,y2 = r*16
+        rect=patches.Rectangle((x1,y1) , x2-x1 , y2-y1 , fill=False , edgecolor='b')
+        ax.add_patch(rect)
 
+    for box in neg_res:
+        x1, y1, x2, y2 = box*16
+        rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='r')
+        ax.add_patch(rect)
+
+    for box in sample_gtboxes:
+        x1, y1, x2, y2 = box
+        rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='w')
+        ax.add_patch(rect)
+
+
+    plt.imshow(img)
+    plt.show()

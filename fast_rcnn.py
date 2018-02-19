@@ -2,19 +2,20 @@ import tensorflow as tf
 class FastRCNN(object):
 
     def __init__(self, path):
-        self.x = tf.placeholder(tf.float32, shape=(1, None, None, 3))
-        self.im_dims = tf.placeholder(tf.float32, shape=[1, 2])
-        self.y = tf.placeholder(tf.float32, shape=(None, 4))
-        self.y_ = tf.placeholder(tf.int32, shape=None)
-        self.learn_rate = tf.placeholder(tf.float32)
-        self.reg_param1 = tf.placeholder(tf.float32)
-        self.reg_param2 = tf.placeholder(tf.float32)
+        self.x_ = tf.placeholder(tf.float32, shape=(1, None, None, 3), name='x_')
+        self.im_dims = tf.placeholder(tf.float32, shape=[1, 2], name='im_dims')
+        self.y_bbox = tf.placeholder(tf.float32, shape=(None, 4), name='y_bbox')
+        self.y_cls = tf.placeholder(tf.int32, shape=None, name='y_cls')
+        self.lr = tf.placeholder(tf.float32, name='lr')
+        self.reg_param1 = tf.placeholder(tf.float32 , name = 'reg_param1')
+        self.reg_param2 = tf.placeholder(tf.float32 , name ='reg_param2')
         self.weights_array = []
         self.bias_array = []
-        self.reg_conv = tf.constant(0.)
-        self.reg_fc = tf.constant(0.)
-        self.pr = tf.placeholder(tf.float32)
-        self.roidb = tf.placeholder(tf.float32, shape=(None, 5))
+        self.reg_conv = tf.constant(0.,name='reg_conv')
+        self.reg_fc = tf.constant(0. , name ='reg_fg')
+        self.pr = tf.placeholder(tf.float32 , name='pr')
+        self.roidb = tf.placeholder(tf.float32, shape=(None, 5) , name='roidb')
+
         self.create_graph(path)
 
     def create_conv_layer(self, graph, prev_layer, layer_scope, pretrained_weight_path_id):
@@ -45,7 +46,7 @@ class FastRCNN(object):
         tf.import_graph_def(graph_def, input_map={"images": images})
         graph = tf.get_default_graph()
 
-        layer = self.create_conv_layer(graph, self.x, 'conv1', '1_1')
+        layer = self.create_conv_layer(graph, self.x_, 'conv1', '1_1')
 
         layer = self.create_conv_layer(graph, layer, 'conv2', '1_2')
 
@@ -127,7 +128,7 @@ class FastRCNN(object):
             W15 = tf.Variable(W15, name='weights')
             b15 = tf.Variable(b15, name='bias')
             self.reg_fc = tf.add(self.reg_fc, tf.nn.l2_loss(W14))
-            self.logits = tf.matmul(self.fc1, W15) + b15
+            self.logits = tf.add(tf.matmul(self.fc1, W15) , b15 , 'logits')
 
         with tf.variable_scope('regression'):
             W16 = tf.truncated_normal(shape=(fc_size, 4), stddev=1e-02)
@@ -135,14 +136,15 @@ class FastRCNN(object):
             W16 = tf.Variable(W16, name='weights')
             b16 = tf.Variable(b16, name='bias')
             self.reg_fc = tf.add(self.reg_fc, tf.nn.l2_loss(W14))
-            self.boxes = tf.matmul(self.fc1, W16) + b16
+            self.boxes = tf.add(tf.matmul(self.fc1, W16) , b16 , name = 'boxes')
+
 
         with tf.variable_scope('optimization'):
-            self.reg_loss = self.reg_loss(self.boxes, self.y)
+            self.reg_loss = self.reg_loss(self.boxes, self.y_bbox)
             self.class_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits,
-                                                                                            labels=self.y_))
-            self.loss_ = tf.add(self.reg_loss, self.class_loss)
-            self.opt = tf.train.MomentumOptimizer(self.learn_rate, 0.9).minimize(self.loss_)
+                                                                                            labels=self.y_cls))
+            self.loss_ = tf.add(self.reg_loss, self.class_loss , name='tot_loss')
+            self.opt = tf.train.MomentumOptimizer(self.lr, 0.9).minimize(self.loss_,name='train_op')
 
     def smooth_l1(self, x, y):
         def smooth_abs(u):
