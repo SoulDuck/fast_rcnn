@@ -26,6 +26,8 @@ class eval():
         return bboxes
 
     def get_iou(self, pred_bbox , gt_bbox):
+        #여러개의 gt박스가 있으면 가장 많이 겹치는 gt_bbox이다
+
         p_x1, p_y1, p_x2, p_y2 = pred_bbox
         g_x1, g_y1, g_x2, g_y2 = gt_bbox
 
@@ -109,12 +111,12 @@ class eval():
 
         mAP=[]
         for img in images:
-            scores=get_scores(img)
-            pred_bboxes=get_bboxes(img)
-            ious=get_ious(pred_bboxes , gt_boxes)
-            gt = get_groundtruths(ious=ious , treshold=0.5)
-            recall_precision =get_recall_precision( scores , groundtruths=gt)
-            ap=get_AP(recall_precision)
+            scores=self.get_scores(img)
+            pred_bboxes=self.get_bboxes(img)
+            ious=self.get_ious(pred_bboxes , gt_boxes)
+            gt = self.get_groundtruths(ious=ious , treshold=0.5)
+            recall_precision = self.get_recall_precision(scores, groundtruths=gt)
+            ap = self.get_AP(recall_precision)
             mAP.append(ap)
 
         return np.mean(mAP)
