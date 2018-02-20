@@ -21,12 +21,16 @@ class Eval():
         self.y_cls = tf.get_default_graph().get_tensor_by_name('y_cls:0')
         self.y_bboxes = tf.get_default_graph().get_tensor_by_name('y_bboxes:0')
 
-    def get_scores(self ,image):
-        scores=self.sess.run(self.logits , feed_dict={self.x_ : image})
+    def get_scores(self ,sess ,logits_tensor,image):
+        scores=sess.run(logits_tensor, feed_dict={self.x_ : image})
         return scores[:,1]
-    def get_boxes(self,image):
-        bboxes = self.sess.run(self.boxes, feed_dict={self.x_: image})
+
+    def get_boxes(self,sess,boxes_tensor,image):
+        bboxes = sess.run(self.boxes, boxes_tensor,feed_dict={self.x_: image})
+
+        # when corresponding original image with bboxes , you must do 'transform_inv (bboxes , im_dims)'
         return bboxes
+
 
     def get_iou(self, pred_bbox , gt_bboxes):
         #여러개의 gt박스가 있으면 가장 많이 겹치는 gt_bbox이다

@@ -8,6 +8,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import random
+import eval
 
 class Trainer(object):
     def __init__(self , data_type):
@@ -333,6 +334,7 @@ class Trainer(object):
                         except Exception as e :
                             print e
                             pass;
+
                     global_step+=1
 
     def show_imgae_with_rois(self , im , pos_rois , neg_rois , gt_bboxes):
