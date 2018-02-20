@@ -278,10 +278,7 @@ class Trainer(object):
                     #get positive and negative roi
                     positive_rois, ob_numbers = self.generate_positive_roi(gt_boxes)
                     negative_rois = self.generate_negative_roi(gt_boxes,(self.img_h , self.img_w))
-                    self.show_imgae_with_rois(im , positive_rois , negative_rois , gt_boxes)
-                    exit()
-
-
+                    #self.show_imgae_with_rois(im , positive_rois , negative_rois , gt_boxes)
 
                     rois = np.vstack([positive_rois, negative_rois])
                     y_ = np.zeros((len(rois), ), dtype=np.int32)
