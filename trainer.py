@@ -94,7 +94,6 @@ class Trainer(object):
         n_neg = 96
         count=0
         while True:
-            print count
             xx = random.sample(range(h), 2)
             x2 = np.max(xx)
             x1 = np.min(xx)
