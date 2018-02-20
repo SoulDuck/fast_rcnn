@@ -28,25 +28,28 @@ class Eval():
         bboxes = self.sess.run(self.boxes, feed_dict={self.x_: image})
         return bboxes
 
-    def get_iou(self, pred_bbox , gt_bbox):
+    def get_iou(self, pred_bbox , gt_bboxes):
         #여러개의 gt박스가 있으면 가장 많이 겹치는 gt_bbox이다
 
-        p_x1, p_y1, p_x2, p_y2 = pred_bbox
-        g_x1, g_y1, g_x2, g_y2 = gt_bbox
+        ious=[]
+        for gt_bbox in gt_bboxes:
+            p_x1, p_y1, p_x2, p_y2 = pred_bbox
+            g_x1, g_y1, g_x2, g_y2 = gt_bbox
 
-        xx1 = np.maximun(p_x1, g_x1)
-        yy1 = np.maximun(p_y1, g_y1)
-        xx2 = np.minimun(p_x2, g_x2)
-        yy2 = np.minimum(p_y2, g_y2)
+            xx1 = np.maximum(p_x1, g_x1)
+            yy1 = np.maximum(p_y1, g_y1)
+            xx2 = np.minimum(p_x2, g_x2)
+            yy2 = np.minimum(p_y2, g_y2)
 
-        w = np.maximum(0, xx2 - xx1 + 1)
-        h = np.maximum(0, yy2 - yy1 + 1)
-        overlap_area = w*h
+            w = np.maximum(0, xx2 - xx1 + 1)
+            h = np.maximum(0, yy2 - yy1 + 1)
+            overlap_area = w*h
+            pred_area=(p_x2-p_x1+1)*(p_y2-p_y1+1)
+            gt_area=(g_x2-g_x1+1)*(g_y2-g_y1+1)
 
-        pred_area=(p_x2-p_x1+1)*(p_y2-p_y1+1)
-        gt_area=(g_x2-g_x1+1)*(g_y2-g_y1+1)
-        iou=overlap_area/(pred_area + gt_area - overlap_area)
-        return iou
+            iou=overlap_area/float(pred_area + gt_area - overlap_area)
+            ious.append(iou)
+        return np.max(ious)
 
     def get_groundtruths(self, ious , treshold):
         return ious > treshold
@@ -154,6 +157,10 @@ class Eval():
 
 if __name__ =='__main__':
     eval=Eval()
+    pred_bbox = [0,0,10,10]
+    gt_bboxes=[[5,5,15,15],[7,7,15,15]]
+    print eval.get_iou(pred_bbox , gt_bboxes)
+
     scores=[0.97,0.96,0.94,0.93,0.91,0.89,0.78,0.77,0.76,0.56]
     gt= [True,True,True,False,True,True,False,True,True,True]
     recall,precision =eval.get_recall_precision(scores , gt)

@@ -1,3 +1,4 @@
+#-*- coding:utf-8 -*-
 import numpy as np
 import os
 import tensorflow as tf
@@ -5,6 +6,7 @@ import cv2
 from fast_rcnn import FastRCNN
 from PIL import Image
 import matplotlib.pyplot as plt
+import random
 
 class Trainer(object):
     def __init__(self , data_type):
@@ -50,16 +52,67 @@ class Trainer(object):
             num_.append(num_box)
         return np.asarray(res), np.asarray(num_)
 
-    def generate_negative_roi(self, gt_boxes):
+    def get_iou(self, pred_bbox , gt_bboxes):
+        #여러개의 gt박스가 있으면 가장 많이 겹치는 gt_bbox이다
+
+        ious=[]
+        for gt_bbox in gt_bboxes:
+            p_x1, p_y1, p_x2, p_y2 = pred_bbox
+            g_x1, g_y1, g_x2, g_y2 = gt_bbox
+
+            xx1 = np.maximum(p_x1, g_x1)
+            yy1 = np.maximum(p_y1, g_y1)
+            xx2 = np.minimum(p_x2, g_x2)
+            yy2 = np.minimum(p_y2, g_y2)
+
+            w = np.maximum(0, xx2 - xx1 + 1)
+            h = np.maximum(0, yy2 - yy1 + 1)
+            overlap_area = w*h
+            pred_area=(p_x2-p_x1+1)*(p_y2-p_y1+1)
+            gt_area=(g_x2-g_x1+1)*(g_y2-g_y1+1)
+
+            iou=overlap_area/float(pred_area + gt_area - overlap_area)
+            ious.append(iou)
+        return np.max(ious)
+
+    """
+        def generate_negative_roi(self, gt_boxes ):
+            res = []
+            for j in range(96):
+                epsilon1 = np.random.randint(50, 300)
+                epsilon2 = np.random.randint(50, 300)
+                num_box = np.random.randint(0, len(gt_boxes))
+                bxes = gt_boxes[num_box] + np.asarray([epsilon1, epsilon2, epsilon1 + 100, epsilon2 + 75])
+                bxes /= 16# it'll apply for feature map
+                res.append(bxes)
+            return np.asarray(res)
+        """
+
+    def generate_negative_roi(self, gt_boxes , im_dims):
         res = []
-        for j in range(96):
-            epsilon1 = np.random.randint(50, 300)
-            epsilon2 = np.random.randint(50, 300)
-            num_box = np.random.randint(0, len(gt_boxes))
-            bxes = gt_boxes[num_box] + np.asarray([epsilon1, epsilon2, epsilon1 + 100, epsilon2 + 75])
+        h,w=im_dims
+        n_neg = 96
+        count=0
+        while True:
+            print count
+            xx = random.sample(range(h), 2)
+            x2 = np.max(xx)
+            x1 = np.min(xx)
+
+            yy = random.sample(range(w), 2)
+            y2 = np.max(yy)
+            y1 = np.min(yy)
+            if self.get_iou([x1,y1,x2,y2] , gt_bboxes=gt_boxes) > 0:
+                continue;
+
+            bxes = np.asarray([x1,y1,x2,y2])
             bxes /= 16# it'll apply for feature map
             res.append(bxes)
+            if len(res) == n_neg:
+                break;
+            count+=1
         return np.asarray(res)
+
 
     def relabel(self, gt_boxes, old_shape, new_shape):
         mult = np.asarray([float(new_shape[1])/old_shape[1],
@@ -284,7 +337,7 @@ if '__main__' == __name__:
     fig = plt.figure()
     ax=fig.add_subplot(111)
     pos_res , pos_num =trainer.generate_positive_roi(sample_gtboxes)
-    neg_res = trainer.generate_negative_roi(sample_gtboxes)
+    neg_res = trainer.generate_negative_roi_acvanced(sample_gtboxes,(1001,1001))
     for r in pos_res:
         x1,y1,x2,y2 = r*16
         rect=patches.Rectangle((x1,y1) , x2-x1 , y2-y1 , fill=False , edgecolor='b')

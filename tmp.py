@@ -3,6 +3,7 @@ import glob
 import os
 import shutil
 import numpy as np
+import random
 csv_files=glob.glob('./data/fundus_rois/*.csv')
 data_dir = './data/fundus_roidb'
 img_dir = './data/fundus_images'
@@ -20,6 +21,8 @@ print a[b]
 './text.txt'
 print os.path.splitext('./text.txt')
 print os.path.split('./abc/text.txt')
+a=random.sample([0,1,2,] ,2 )
+print a
 exit()
 
 
