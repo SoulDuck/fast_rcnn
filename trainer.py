@@ -249,37 +249,40 @@ class Trainer(object):
             #self.im_channels[1].send(x=time_step, y=neptune_im)
 
     def fit(self , num_epochs , save_path):
-        with tf.Session(config=tf.ConfigProto(
-                                allow_soft_placement=True,
-                                log_device_placement=False)) as sess:
+        with tf.Session(config=tf.ConfigProto(allow_soft_placement=True,log_device_placement=False)) as sess:
+            # Session start
             saver=tf.train.Saver(max_to_keep=10)
             save_dir , model_name =os.path.split(save_path)
             init = tf.global_variables_initializer()
             sess.run(init)
+            # Restore Model
             if tf.train.get_checkpoint_state(checkpoint_dir=save_dir):
                 save_path=os.path.join(save_path)
                 saver.restore(sess, save_path=save_path)
             k = 0
             losses_ = [[], [], []]
             global_step=0
+
             for i in range(num_epochs):
                 ids = np.arange(len(self.im_paths))
                 np.random.shuffle(ids)
                 im_paths = self.im_paths[ids]
                 roi_paths = self.roi_paths[ids]
+
                 for m in range(len(im_paths)):
-                    #load image and resize image
+                    # Load image and Resize image
                     im = cv2.imread(im_paths[m]).astype('float32')/255.
                     gt_boxes = np.load(roi_paths[m])
                     gt_boxes = self.relabel(gt_boxes, im.shape, (self.img_w, self.img_h))
                     im = cv2.resize(im, (self.img_h, self.img_w))
                     x = im.reshape((1, im.shape[0], im.shape[1], 3))
 
-                    #get positive and negative roi
+                    # Get positive and Negative roi
                     positive_rois, ob_numbers = self.generate_positive_roi(gt_boxes)
                     negative_rois = self.generate_negative_roi(gt_boxes,(self.img_h , self.img_w))
                     #self.show_imgae_with_rois(im , positive_rois , negative_rois , gt_boxes)
 
+                    # change ROI shape [36+96, 4] --> [36+96, 5]
                     rois = np.vstack([positive_rois, negative_rois])
                     y_ = np.zeros((len(rois), ), dtype=np.int32)
                     zeros = np.zeros((len(rois), 1))
@@ -292,17 +295,13 @@ class Trainer(object):
 
                     for j in range(32):
                         reg[j] = boxes_tr[ob_numbers[j]]
-                    feed_dict = {self.net.x_: x,
-                                 self.net.y_bbox: reg,
-                                 self.net.y_cls: y_,
-                                 self.net.roidb: rois,
+                    feed_dict = {self.net.x_: x, self.net.y_bbox: reg, self.net.y_cls: y_, self.net.roidb: rois,
                                  self.net.lr: 0.0001,
-                                 self.net.im_dims:[[self.img_h,self.img_w]]}
+                                 self.net.im_dims: [[self.img_h, self.img_w]]}
 
                     sess.run(self.net.opt, feed_dict=feed_dict)
-                    tot = sess.run(self.net.loss_, feed_dict=feed_dict)
-                    reg = sess.run(self.net.reg_loss, feed_dict=feed_dict)
-                    cls = sess.run(self.net.class_loss, feed_dict=feed_dict)
+                    tot, reg, cls = sess.run([self.net.loss_, self.net.reg_loss, self.net.class_loss],
+                                             feed_dict=feed_dict)
                     losses_[0].append(reg)
                     losses_[1].append(cls)
                     losses_[2].append(tot)
@@ -313,15 +312,19 @@ class Trainer(object):
                         print reg , cls ,tot
                     if m % 100 == 0:
                         try:
-                            boxes = sess.run(self.net.boxes, feed_dict=feed_dict)
-                            logits = sess.run(self.net.logits, feed_dict=feed_dict)
+                            boxes , logits = sess.run([self.net.boxes ,self.net.logits], feed_dict=feed_dict)
                             boxes = self.transform_inv(boxes, im.shape)
+
+                            # Get Scores
                             logits = logits[:, 1]
                             scores = np.reshape(logits, (-1, 1))
+
                             boxes = np.hstack([boxes, scores])
-                            boxes = self.get_top_k(boxes, logits, 20)
+                            boxes = self.get_top_k(boxes, logits, 50)
                             keep = self.non_maximum_supression(boxes, .3)
                             boxes = boxes[keep, :4]
+
+                            # Roi Pooling
                             roi_pool = rois[:, 1:]*np.asarray([16, 16, 16, 16])
                             self.send_image_with_proposals(k, im[:, :, [2, 1, 0]], boxes, im.shape , gt_boxes)
                             saver.save(sess , save_path='./saved_model/model' , global_step=global_step)
@@ -331,6 +334,7 @@ class Trainer(object):
                             print e
                             pass;
                     global_step+=1
+
     def show_imgae_with_rois(self , im , pos_rois , neg_rois , gt_bboxes):
         fig = plt.figure()
         ax = fig.add_subplot(111)
