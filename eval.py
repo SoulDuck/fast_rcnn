@@ -48,10 +48,6 @@ class Eval():
         iou=overlap_area/(pred_area + gt_area - overlap_area)
         return iou
 
-
-
-
-
     def get_groundtruths(self, ious , treshold):
         return ious > treshold
 
@@ -151,7 +147,7 @@ class Eval():
             ious=self.get_ious(pred_bboxes , gt_boxes)
             gt = self.get_groundtruths(ious=ious , treshold=0.5)
             recall_precision = self.get_recall_precision(scores, groundtruths=gt)
-            ap = self.get_AP(recall_precision)
+            ap = self.get_AP(recall , precision)
             mAP.append(ap)
 
         return np.mean(mAP)
