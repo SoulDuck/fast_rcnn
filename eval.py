@@ -54,28 +54,32 @@ class Eval():
             ious.append(iou)
         return np.max(ious)
 
+    def transform_inv(self, output, shape):
+        dx = shape[1]
+        dy = shape[0]
+        x = output[:, 0]*dx
+        y = output[:, 1]*dy
+        w = output[:, 2]*dx
+        h = output[:, 3]*dy
+        x -= w/2.
+        y -= h/2.
+        x2 = x + w
+        y2 = y + h
+        x = np.reshape(x, (-1, 1))
+        y = np.reshape(y, (-1, 1))
+        x2 = np.reshape(x2, (-1, 1))
+        y2 = np.reshape(y2, (-1, 1))
+        return np.hstack([x, y, x2, y2])
+
     def get_groundtruths(self, ious , treshold):
         return [np.asarray(ious) > treshold]
 
-    #scores = get_scores(image)
-    #pred_bboxes = get_bboxes(image)
-
-    """
-    ious=[]
-        for i in range(len(pred_bboxes)):
-            iou=get_iou(pred_bboxes , gt_boxes)
-            ious.append(iou)
-        gt=get_groundtruths(ious,  treshold=0.5)
-    
-    """
     def get_recall_precision(self,scores , groundtruths):
-
         assert len(scores) == len(groundtruths)
         scores_gts = np.hstack((np.asarray(scores).reshape((-1, 1)), np.asarray(groundtruths).reshape((-1, 1))))  # scr = scores
         order = scores_gts[:, 0].argsort()[::-1]
         scores_gts=scores_gts[order] # sort the list by ascenging order
         n_gts = len(scores_gts[: ,1] == True)
-
         n_true_pos=0.0
         ret_recall =[]
         ret_precision =[]
@@ -136,7 +140,7 @@ class Eval():
             precisions.append(self.get_interpolated_precision(recall, precision, thres_recall))
         return np.mean(precisions)
 
-    def get_mAP(self,images , gt_boxes):
+    def get_mAP(self,images , gt_boxes , sess, logits_tensor , boxes_tensor):
         """
         example
         a=[0.7,0.3,0.9]
@@ -148,14 +152,16 @@ class Eval():
         """
         mAP=[]
         for img in images:
-            scores=self.get_scores(img)
-            pred_bboxes=self.get_bboxes(img)
+            scores=self.get_scores(sess,  logits_tensor ,img )
+            pred_bboxes=self.get_bboxes(sess, boxes_tensor , img)
             ious=[]
             for bbox in pred_bboxes:
                 iou=self.get_iou(bbox, gt_boxes)
                 ious.append(iou)
+            h,w=np.shape(img)[:2]
+            pred_bbox=self.transform_inv(pred_bbox, (h, w))
             gt = self.get_groundtruths(ious=ious , treshold=0.5)
-            recall_precision = self.get_recall_precision(scores, groundtruths=gt)
+            recall , precision = self.get_recall_precision(scores, groundtruths=gt)
             ap = self.get_AP(recall , precision)
             mAP.append(ap)
 
@@ -163,7 +169,7 @@ class Eval():
 
 if __name__ =='__main__':
     eval=Eval()
-    ious = [0.78 , 0.88 , 0.76 , 0.43 , 0.44 ]
+    ious = [0.78, 0.88, 0.76, 0.43, 0.44]
     pred_bbox = [0,0,10,10]
     gt_bboxes=[[5,5,15,15],[7,7,15,15]]
     print eval.get_iou(pred_bbox , gt_bboxes)
