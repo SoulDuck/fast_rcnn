@@ -276,7 +276,12 @@ class Trainer(object):
 
                     #get positive and negative roi
                     positive_rois, ob_numbers = self.generate_positive_roi(gt_boxes)
-                    negative_rois = self.generate_negative_roi(gt_boxes)
+                    negative_rois = self.generate_negative_roi(gt_boxes,(self.img_h , self.img_w))
+                    self.show_imgae_with_rois(im , positive_rois , negative_rois , gt_boxes)
+                    exit()
+
+
+
                     rois = np.vstack([positive_rois, negative_rois])
                     y_ = np.zeros((len(rois), ), dtype=np.int32)
                     zeros = np.zeros((len(rois), 1))
@@ -328,30 +333,31 @@ class Trainer(object):
                             print e
                             pass;
                     global_step+=1
+    def show_imgae_with_rois(self , im , pos_rois , neg_rois , gt_bboxes):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        for r in pos_rois:
+            x1, y1, x2, y2 = r * 16
+            rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='b')
+            ax.add_patch(rect)
+
+        for box in neg_rois:
+            x1, y1, x2, y2 = box * 16
+            rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='r')
+            ax.add_patch(rect)
+
+        for box in gt_bboxes:
+            x1, y1, x2, y2 = box
+            rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='w')
+            ax.add_patch(rect)
+
+        plt.imshow(img)
+        plt.show()
 if '__main__' == __name__:
     import matplotlib.patches as patches
     sample_gtboxes=np.load('/Users/seongjungkim/PycharmProjects/fast_rcnn/data/fundus_roidb/5068136_20160511_R.png.npy')
     img=Image.open('/Users/seongjungkim/PycharmProjects/fast_rcnn/data/fundus_images/5068136_20160511_R.png')
     trainer=Trainer('fundus')
-    fig = plt.figure()
-    ax=fig.add_subplot(111)
     pos_res , pos_num =trainer.generate_positive_roi(sample_gtboxes)
-    neg_res = trainer.generate_negative_roi_acvanced(sample_gtboxes,(1001,1001))
-    for r in pos_res:
-        x1,y1,x2,y2 = r*16
-        rect=patches.Rectangle((x1,y1) , x2-x1 , y2-y1 , fill=False , edgecolor='b')
-        ax.add_patch(rect)
-
-    for box in neg_res:
-        x1, y1, x2, y2 = box*16
-        rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='r')
-        ax.add_patch(rect)
-
-    for box in sample_gtboxes:
-        x1, y1, x2, y2 = box
-        rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='w')
-        ax.add_patch(rect)
-
-
-    plt.imshow(img)
-    plt.show()
+    neg_res = trainer.generate_negative_roi(sample_gtboxes,(1001,1001))
+    trainer.show_imgae_with_rois(img ,pos_res , neg_res , sample_gtboxes)
