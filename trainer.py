@@ -352,7 +352,7 @@ class Trainer(object):
             rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='w')
             ax.add_patch(rect)
 
-        plt.imshow(img)
+        plt.imshow(im)
         plt.show()
 if '__main__' == __name__:
     import matplotlib.patches as patches
