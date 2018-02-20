@@ -31,7 +31,6 @@ class Eval():
         # when corresponding original image with bboxes , you must do 'transform_inv (bboxes , im_dims)'
         return bboxes
 
-
     def get_iou(self, pred_bbox , gt_bboxes):
         #여러개의 gt박스가 있으면 가장 많이 겹치는 gt_bbox이다
 
@@ -56,7 +55,7 @@ class Eval():
         return np.max(ious)
 
     def get_groundtruths(self, ious , treshold):
-        return ious > treshold
+        return [np.asarray(ious) > treshold]
 
     #scores = get_scores(image)
     #pred_bboxes = get_bboxes(image)
@@ -151,7 +150,10 @@ class Eval():
         for img in images:
             scores=self.get_scores(img)
             pred_bboxes=self.get_bboxes(img)
-            ious=self.get_ious(pred_bboxes , gt_boxes)
+            ious=[]
+            for bbox in pred_bboxes:
+                iou=self.get_iou(bbox, gt_boxes)
+                ious.append(iou)
             gt = self.get_groundtruths(ious=ious , treshold=0.5)
             recall_precision = self.get_recall_precision(scores, groundtruths=gt)
             ap = self.get_AP(recall , precision)
@@ -161,6 +163,7 @@ class Eval():
 
 if __name__ =='__main__':
     eval=Eval()
+    ious = [0.78 , 0.88 , 0.76 , 0.43 , 0.44 ]
     pred_bbox = [0,0,10,10]
     gt_bboxes=[[5,5,15,15],[7,7,15,15]]
     print eval.get_iou(pred_bbox , gt_bboxes)
