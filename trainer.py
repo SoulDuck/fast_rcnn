@@ -6,6 +6,7 @@ import cv2
 from fast_rcnn import FastRCNN
 from PIL import Image
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import random
 
 class Trainer(object):
