@@ -131,6 +131,7 @@ class Trainer(object):
         boxes_ = np.float32(boxes_)
         dw = 1./shape[1]
         dh = 1./shape[0]
+
         x = (boxes_[:, 0] + boxes_[:, 2])*dw/2.
         y = (boxes_[:, 1] + boxes_[:, 3])*dh/2.
         w = (boxes_[:, 2] - boxes_[:, 0])*dw
@@ -196,7 +197,7 @@ class Trainer(object):
             order = order[inds + 1]
         return keep
 
-    def send_image_with_proposals(self, time_step, im, proposals, shape, rois=False):
+    def send_image_with_proposals(self, im, proposals, shape, rois=False):
         width = 300
         height = 300
         im_ = cv2.resize(im, (width, height))
@@ -286,9 +287,11 @@ class Trainer(object):
                     # change ROI shape [36+96, 4] --> [36+96, 5]
                     rois = np.vstack([positive_rois, negative_rois])
                     y_ = np.zeros((len(rois), ), dtype=np.int32)
+
                     zeros = np.zeros((len(rois), 1))
                     rois = np.hstack([zeros, rois])
                     rois = np.int32(rois)
+
 
                     y_[:len(positive_rois)] = 1
                     reg = np.zeros((len(rois), 4))
@@ -306,12 +309,14 @@ class Trainer(object):
                     losses_[0].append(reg)
                     losses_[1].append(cls)
                     losses_[2].append(tot)
+
                     if m % 100 == 0:
                         reg = sum(losses_[0])/len(losses_[0])
                         cls = sum(losses_[1])/len(losses_[1])
                         tot = sum(losses_[2])/len(losses_[2])
                         print reg , cls ,tot
-                    if m % 100 == 0:
+
+                    if m % 1 == 0:
                         try:
                             boxes , logits = sess.run([self.net.boxes ,self.net.logits], feed_dict=feed_dict)
                             boxes = self.transform_inv(boxes, im.shape)

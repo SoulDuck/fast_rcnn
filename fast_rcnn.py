@@ -1,6 +1,5 @@
 import tensorflow as tf
 class FastRCNN(object):
-
     def __init__(self, path):
         self.x_ = tf.placeholder(tf.float32, shape=(1, None, None, 3), name='x_')
         self.im_dims = tf.placeholder(tf.float32, shape=[1, 2], name='im_dims')
@@ -15,7 +14,6 @@ class FastRCNN(object):
         self.reg_fc = tf.constant(0. , name ='reg_fg')
         self.pr = tf.placeholder(tf.float32 , name='pr')
         self.roidb = tf.placeholder(tf.float32, shape=(None, 5) , name='roidb')
-
         self.create_graph(path)
 
     def create_conv_layer(self, graph, prev_layer, layer_scope, pretrained_weight_path_id):
@@ -36,7 +34,6 @@ class FastRCNN(object):
             return tf.nn.max_pool(prev_layer, strides=[1, 2, 2, 1], ksize=[1, 2, 2, 1], padding='SAME')
 
     def create_graph(self, path):
-
         with open(path, mode='rb') as f:
             self.fileContent = f.read()
 
@@ -137,7 +134,6 @@ class FastRCNN(object):
             b16 = tf.Variable(b16, name='bias')
             self.reg_fc = tf.add(self.reg_fc, tf.nn.l2_loss(W14))
             self.boxes = tf.add(tf.matmul(self.fc1, W16) , b16 , name = 'boxes')
-
 
         with tf.variable_scope('optimization'):
             self.reg_loss = self.reg_loss(self.boxes, self.y_bbox)
