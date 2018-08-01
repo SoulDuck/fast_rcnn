@@ -32,6 +32,7 @@ class Trainer(object):
         self.roi_paths = np.asarray(roi_paths)
         self.net = FastRCNN(path=self.pretrained_path)
 
+
     def get_im_paths(self):
         self.im_names = os.listdir(self.im_dir)
         paths = [os.path.join(self.im_dir, el) for el in self.im_names]
@@ -282,30 +283,34 @@ class Trainer(object):
                     # Get positive and Negative roi
                     positive_rois, ob_numbers = self.generate_positive_roi(gt_boxes)
                     negative_rois = self.generate_negative_roi(gt_boxes,(self.img_h , self.img_w))
+
                     #self.show_imgae_with_rois(im , positive_rois , negative_rois , gt_boxes)
 
-                    # change ROI shape [36+96, 4] --> [36+96, 5]
+                    # change ROI shape [32+96, 4] --> [32+96, 5]
                     rois = np.vstack([positive_rois, negative_rois])
                     y_ = np.zeros((len(rois), ), dtype=np.int32)
 
                     zeros = np.zeros((len(rois), 1))
                     rois = np.hstack([zeros, rois])
                     rois = np.int32(rois)
-
-
                     y_[:len(positive_rois)] = 1
                     reg = np.zeros((len(rois), 4))
                     boxes_tr = self.bbox_transform(gt_boxes, im.shape)
 
                     for j in range(32):
+                        print ob_numbers[j]
                         reg[j] = boxes_tr[ob_numbers[j]]
+                        print boxes_tr[ob_numbers[j]]
+
                     feed_dict = {self.net.x_: x, self.net.y_bbox: reg, self.net.y_cls: y_, self.net.roidb: rois,
                                  self.net.lr: 0.0001,
                                  self.net.im_dims: [[self.img_h, self.img_w]]}
 
-                    sess.run(self.net.opt, feed_dict=feed_dict)
+                    _ , boxes =sess.run([self.net.opt ,self.net.boxes] , feed_dict=feed_dict)
                     tot, reg, cls = sess.run([self.net.loss_, self.net.reg_loss, self.net.class_loss],
                                              feed_dict=feed_dict)
+
+
                     losses_[0].append(reg)
                     losses_[1].append(cls)
                     losses_[2].append(tot)
