@@ -298,7 +298,6 @@ class Trainer(object):
                     boxes_tr = self.bbox_transform(gt_boxes, im.shape)
 
                     for j in range(32):
-                        print ob_numbers[j]
                         reg[j] = boxes_tr[ob_numbers[j]]
                         print boxes_tr[ob_numbers[j]]
 
@@ -309,9 +308,6 @@ class Trainer(object):
                     _ , boxes =sess.run([self.net.opt ,self.net.boxes] , feed_dict=feed_dict)
                     tot, reg, cls = sess.run([self.net.loss_, self.net.reg_loss, self.net.class_loss],
                                              feed_dict=feed_dict)
-                    print boxes
-                    print len(boxes)
-                    exit()
 
 
 
