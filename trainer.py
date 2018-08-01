@@ -310,6 +310,7 @@ class Trainer(object):
                     tot, reg, cls = sess.run([self.net.loss_, self.net.reg_loss, self.net.class_loss],
                                              feed_dict=feed_dict)
                     print boxes
+                    print len(boxes)
                     exit()
 
 
